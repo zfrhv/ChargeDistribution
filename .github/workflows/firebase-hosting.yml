@@ -19,4 +19,4 @@ jobs:
         with:
           args: deploy --only hosting
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ZAHAR_CHARGE_DISTRIBUTION }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
