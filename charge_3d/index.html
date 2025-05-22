@@ -1,14 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-      <meta charset="UTF-8">
-      <title>Charge Distribution 3D</title>
-      <link rel="stylesheet" href="../index.css">
-  </head>
-  <body>
-    <script src="../lib/three.min.js"></script>
-    <script src="../lib/OrbitControls.min.js"></script>
-    <script src="./index_sphere.js"></script>
-    <!-- <script src="./index_cube.js"></script> -->
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <title>Charge Distribution 3D</title>
+    <link rel="stylesheet" href="../index.css">
+</head>
+<body>
+<div id="plot"></div>
+
+<div id="right-bar">
+<div id="right-bar-container">
+    <div>
+        <h2>Shapes</h1>
+        <button id="sphere-btn">Sphere</button>
+        <button id="box-btn">Box</button>
+    </div>
+
+    <br>
+    <br>
+    <a href="../">Go back to the main page</a><br>
+</div>
+</div>
+
+
+<script src="../lib/three.min.js"></script>
+<script src="../lib/OrbitControls.min.js"></script>
+<script src="./shapes.js"></script>
+<script src="./index.js"></script>
+<!-- <script src="./index_cube.js"></script> -->
+</body>
 </html>

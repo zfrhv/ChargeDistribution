@@ -33,7 +33,9 @@ canvas {
   right: 0;
   border-left: solid #545d6f;
   overflow: auto;
-  padding: 20px;
+}
+#right-bar-container {
+  margin: 20px;
 }
 #right-bar::-webkit-scrollbar {
   width: 10px;
