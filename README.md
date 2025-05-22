@@ -9,4 +9,6 @@ There are 3 options:
 
 The 2d charges/electrons distribution was made with help of [Simon Berens](https://github.com/SimonBerens/ChargeDistribution).
 
-You can clone the repo or visit the firebase/github pages website.
+You can clone the repo or visit the firebase/github pages website:
+- https://zfrhv.github.io/ChargeDistribution/
+- https://zahar-charge-distribution.web.app/
