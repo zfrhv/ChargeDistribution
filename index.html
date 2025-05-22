@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Charge Distribution</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+    <h1>Working in progress, yes 2d is done</h1>
+    <a href="charge_2d/">Charge Distribution 2D</a><br>
+    <a href="charge_3d/">Charge Distribution 3D</a><br>
+    <a href="tmp">Current Distribution</a><br>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.min.js"></script>
+<script src="sketch3d_sphere.js"></script>
+<!-- <script src="sketch3d.js"></script> -->
+
+<!-- TODO add control bar from right side (cuz left side is for the navbar) -->
+<!-- in the control bar make so for each shape i could choose if it connected and then input the volrage, or disconnected and input the charge on the conductor -->
+<!-- available shapes: cube, sphere, circle, square, line (small tube) -->
+
+<!-- ok so 3 simulators: -->
+<!-- 2d shapes charge distribution but in a 3d space (you can put multiple places) -->
+    <!-- input parameters: is the shape grounded/connected to wire, if so whats the voltage, if not then whats the charge -->
+    <!-- control over the orientation and the position of the shape -->
+    <!-- output: the electric field lines and potential levels lines -->
+    <!-- available shapes: circle (just circle + dot for small r), rectangle (square + line for small h) -->
+<!-- 3d shapes charge distribution -->
+    <!-- input parameters: is the shape grounded/connected to wire, if so whats the voltage, if not then whats the charge -->
+    <!-- control over the orientation and the position of the shape -->
+    <!-- output: the electric field lines and potential levels lines -->
+    <!-- available shapes: sphere, rectengular (cube + plates or rods for small h),  -->
+<!-- wire simulator -->
+    <!-- the charge distribution over a circular wire -->
+    <!-- the input is the potential across the wire? -->
+    <!-- output is the potential voltage across the wire? -->
+    <!-- need it to know the charge distribution for linear potential in a circular wire -->
+    <!-- then from that charge distribution i need to check for the force with another conductive coil -->
+    <!-- and then conductive coil + also current via different voltages -->
+
+
+<!-- post it both on github pages and firebase for higher googling chances -->
+</body>
+</html>

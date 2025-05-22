@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Physics</title>
+    <link rel="stylesheet" href="/index.css">
+</head>
+<body>
+
+<div id="plot"></div>
+
+<div id="right-bar">
+    <div id="controller">
+        <div class="slider-container">
+            <div id="controller-left">
+                <label for="mass" class="slider-label">Mass (kg): </label>
+                <span id="mv">5</span>
+            </div>
+            <div id="controller-right">
+                <input id="mass" class="slider" type="range" min="5" max="10" value="5" step="0.01">
+            </div>
+        </div>
+        <div class="slider-container">
+            <div id="controller-left">
+                <label for="charge" class="slider-label">Charge (mC): </label>
+                <span id="cv">10</span>
+            </div>
+            <div id="controller-right">
+                <input id="charge" class="slider" type="range" min="1" max="10" value="10" step="0.01">
+            </div>
+        </div>
+        <div class="slider-container">
+            <div id="controller-left">
+                <label for="density" class="slider-label">Charges per 1000 pixels: </label>
+                <span id="dv">4</span>
+            </div>
+            <div id="controller-right">
+                <input id="density" class="slider" type="range" min="1" max="5" value="4" step="0.01">
+            </div>
+        </div>
+        <div class="slider-container">
+            <div id="controller-left">
+                <label for="friction" class="slider-label">Energy Conservation: </label>
+                <span id="fv">0.98</span>
+            </div>
+            <div id="controller-right">
+                <input id="friction" class="slider" type="range" min="0" max="1" value="0.98" step="0.001">
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h2>Drawing</h1>
+        <button id="draw-btn">Draw</button>
+        <button id="finish-drawing-btn">Finish drawing (d)</button>
+    </div>
+
+    <div>
+        <h2>Shapes</h1>
+        <button id="circle-btn">Circle</button>
+        <button id="dogbone-btn">Dog Bone</button>
+        <button id="cctri-btn">Concave Triangle</button>
+    </div>
+
+    <div>
+        <h2>Actions</h1>
+        <button id="fill-charges-btn">Fill with charges (q)</button>
+        <button id="clear-btn">Clear (c)</button>
+    </div>
+</div>
+
+
+<script src="/lib/p5.min.js"></script>
+<script src="/lib/p5.dom.js"></script>
+<script src="/lib/buckets.min.js"></script>
+<script src="/lib/chart.js"></script>
+<script src="./index.js"></script>
+
+</body>
+</html>
