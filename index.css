@@ -8,6 +8,10 @@ html, body {
   overflow: hidden;
 }
 
+a {
+  color: white;
+}
+
 #plot {
   width: 65%;
   height: 100%;
