@@ -12,59 +12,78 @@
 <div id="right-bar-container">
     <div id="controller">
         <div class="slider-container">
-            <div id="controller-left">
+            <div class="controller-left">
                 <label for="mass" class="slider-label">Mass (kg): </label>
                 <span id="mv">5</span>
             </div>
-            <div id="controller-right">
+            <div class="controller-right">
                 <input id="mass" class="slider" type="range" min="5" max="10" value="5" step="0.01">
             </div>
         </div>
         <div class="slider-container">
-            <div id="controller-left">
+            <div class="controller-left">
                 <label for="charge" class="slider-label">Charge (mC): </label>
                 <span id="cv">10</span>
             </div>
-            <div id="controller-right">
+            <div class="controller-right">
                 <input id="charge" class="slider" type="range" min="1" max="10" value="10" step="0.01">
             </div>
         </div>
         <div class="slider-container">
-            <div id="controller-left">
-                <label for="density" class="slider-label">Charges per 1000 pixels: </label>
-                <span id="dv">4</span>
-            </div>
-            <div id="controller-right">
-                <input id="density" class="slider" type="range" min="1" max="5" value="4" step="0.01">
-            </div>
-        </div>
-        <div class="slider-container">
-            <div id="controller-left">
+            <div class="controller-left">
                 <label for="friction" class="slider-label">Energy Conservation: </label>
                 <span id="fv">0.98</span>
             </div>
-            <div id="controller-right">
+            <div class="controller-right">
                 <input id="friction" class="slider" type="range" min="0" max="1" value="0.98" step="0.001">
             </div>
         </div>
     </div>
 
     <div>
-        <h2>Drawing (you can draw multiple times)</h1>
+        <h2>Drawing</h2>
+        <h3>(you can draw multiple times)</h3>
         <button id="draw-btn">Draw</button>
         <button id="finish-drawing-btn">Finish drawing (d)</button>
     </div>
 
     <div>
-        <h2>Shapes</h1>
+        <h2>Shapes</h2>
         <button id="circle-btn">Circle</button>
         <button id="dogbone-btn">Dog Bone</button>
         <button id="cctri-btn">Concave Triangle</button>
     </div>
 
     <div>
-        <h2>Actions</h1>
+        <h2>Charges</h2>
+        <div class="slider-container">
+            <div class="controller-left">
+                <label for="density" class="slider-label">Charges per 1000 pixels: </label>
+                <span id="dv">4</span>
+            </div>
+            <div class="controller-right">
+                <input id="density" class="slider" type="range" min="1" max="5" value="4" step="0.01">
+            </div>
+        </div>
         <button id="fill-charges-btn">Fill with charges (q)</button>
+    </div>
+
+    <div>
+        <h2>Ptential</h2>
+        <div class="slider-container">
+            <div class="controller-left">
+                <label for="potential" class="slider-label">Potential at a point: </label>
+                <span id="pv">10</span>
+            </div>
+            <div class="controller-right">
+                <input id="potential" class="slider" type="range" min="0" max="20" value="10" step="0.1">
+            </div>
+        </div>
+        <button id="set-potential-btn">Set potential</button>
+    </div>
+
+    <div>
+        <h2>Canvas</h2>
         <button id="clear-btn">Clear (c)</button>
     </div>
 

@@ -35,13 +35,15 @@ const C = {
     Q: 0.5, // increase charge and
     K: 8.99 * 2, // reduce exponent
     RAND: 800,
-    FRICTION: 0.98
+    FRICTION: 0.98,
+    POTENTIAL: 0
 };
 
 let bound_color;
 let inside_color;
 let particle_color;
 let inside_shape_color;
+let potential_color;
 
 function setup() {
     const canvas = createCanvas(500, 500);
@@ -57,6 +59,7 @@ function setup() {
     inside_color = color(40, 56, 93, 255);
     particle_color = color(255, 40, 50, 255);
     inside_shape_color = color(42, 58, 95, 255);
+    potential_color = color(80, 220, 100, 255);
     background(inside_color);
     strokeWeight(2);
     fill(255, 0);
@@ -70,6 +73,8 @@ function draw() {
     update_shapes();
     draw_preset_shapes();
     finish_updating_pixels_if_needed();
+    draw_potentials();
+    use_potentials();
     move_charges();
     update_graph();
 }
@@ -111,6 +116,11 @@ function move_charges() {
                     c.force.add(f);
                 }
             });
+            potential_charges.forEach(o => {
+                f.set(p5.Vector.sub(c.pos, o.pos));
+                f.setMag(C.K * C.Q * o.Q / dist(c.pos.x, c.pos.y, o.pos.x, o.pos.y)**2);
+                c.force.add(f);
+            });
         });
         charges.forEach(c => {
             c.velocity.add(c.force.div(C.M)).mult(C.FRICTION);
@@ -119,6 +129,9 @@ function move_charges() {
                 c.pos.sub(c.velocity);
                 c.velocity.rotate(Math.random() * Math.PI * 2).div(1.5); // cant know the dorder direction, so just repel randomly.
             }
+            circle(c.pos.x, c.pos.y, 5);
+        });
+        potential_charges.forEach(c => {
             circle(c.pos.x, c.pos.y, 5);
         });
     }
@@ -161,7 +174,9 @@ function clear_all() {
         shape.clear();
     });
     shapes = [];
+    potentials = [];
     charges.clear();
+    potential_charges.clear();
     current_drawing_shape = undefined;
     moving_charge = false;
     clrear_preset();
@@ -176,10 +191,8 @@ function keyPressed() {
         const points = shapes[current_drawing_shape];
         points.add(new Point(points.first().x, points.first().y));
         current_drawing_shape = undefined;
-    } else if (key === 'q' && current_drawing_shape == undefined) {
-        distribute_charge(Math.floor(mouseX), Math.floor(mouseY)).then(() => {
-            moving_charge = true;
-        });
+    } else if (key === 'q' && current_drawing_shape == undefined && on_canvas(Math.floor(mouseX), Math.floor(mouseY))) {
+        distribute_charge(Math.floor(mouseX), Math.floor(mouseY));
     }
 }
 
@@ -192,14 +205,25 @@ document.getElementById('finish-drawing-btn').onclick = e => {
     current_drawing_shape = undefined;
 };
 document.getElementById('fill-charges-btn').onclick = e => {
-    distribute_charge(width/2, height/2).then(() => {
-        moving_charge = true;
-    });
+    // wait for nex click to distribut charges
+    function handleClick(event) {
+        if (event != e) {
+            if (on_canvas(Math.floor(mouseX), Math.floor(mouseY))) {
+                distribute_charge(Math.floor(mouseX), Math.floor(mouseY));
+                document.removeEventListener("click", handleClick);
+                document.body.style.cursor = "default";
+            }
+        }
+    }
+    // listen for the next mouse click
+    document.addEventListener("click", handleClick);
+    document.body.style.cursor = "grabbing";
 };
 
-async function distribute_charge(center_x, center_y) {
+async function distribute_charge(center_x, center_y, probability_volume = C.RAND) {
     update_pixels = true;
     await update_pixels_promise;
+
 
     let bfsq = new buckets.Queue();
     bfsq.add(new Point(center_x, center_y));
@@ -207,7 +231,7 @@ async function distribute_charge(center_x, center_y) {
         let cur = bfsq.dequeue();
         if (pixel_is_background_color(cur.x, cur.y)) {
             set_color(cur.x, cur.y, inside_shape_color);
-            if (Math.floor(Math.random() * C.RAND) === 0) {
+            if (probability_volume >= 0 && Math.floor(Math.random() * probability_volume) === 0) {
                 charges.add(new Charge(cur.x, cur.y));
             }
             bfsq.add(new Point(cur.x + 1, cur.y));
@@ -216,6 +240,8 @@ async function distribute_charge(center_x, center_y) {
             bfsq.add(new Point(cur.x, cur.y - 1));
         }
     }
+
+    moving_charge = true;
 }
 
 function reset_screen() {
@@ -246,7 +272,8 @@ let sliders = [
     ["density", "RAND", v => {
         return 1000 / v
     }],
-    ["friction", "FRICTION"]
+    ["friction", "FRICTION"],
+    ["potential", "POTENTIAL"]
 ];
 
 sliders.forEach(sp => {
@@ -274,3 +301,82 @@ document.getElementById('draw-btn').onclick = e => {
     noFill();
     stroke(bound_color);
 };
+
+
+// potential points
+
+let potential_charges = buckets.LinkedList();
+
+class PotentialCharge extends Charge {
+    constructor(x, y, parent_potential, Q = C.Q) {
+        super(x, y);
+        this.parent_potential = parent_potential;
+        this.Q = Q;
+    }
+}
+
+class Potential {
+    constructor(x, y, potential) {
+        this.pos = createVector(x, y);
+        this.potential = potential;
+        this.offset = 5;
+        potential_charges.add(new PotentialCharge(x, y, this));
+    }
+
+    generate_charges() {
+        if (this.current_potential() < this.potential) {
+            const new_x = Math.random()*2*this.offset - this.offset + this.pos.x;
+            const new_y = Math.random()*2*this.offset - this.offset + this.pos.y;
+            charges.add(new Charge(new_x, new_y));
+        }
+    }
+
+    current_potential() {
+        let P_T = 0;
+        charges.forEach(c => {
+            P_T += C.K * C.Q / dist(c.pos.x, c.pos.y, this.pos.x, this.pos.y);
+        });
+        return P_T;
+    }
+}
+
+let potentials = [];
+
+document.getElementById('set-potential-btn').onclick = e => {
+    // wait for nex click to distribut charges
+    function handleClick(event) {
+        if (event != e) {
+            if (on_canvas(Math.floor(mouseX), Math.floor(mouseY))) {
+                add_potential(Math.floor(mouseX), Math.floor(mouseY))
+                document.removeEventListener("click", handleClick);
+                document.body.style.cursor = "default";
+            }
+        }
+    }
+    // listen for the next mouse click
+    document.addEventListener("click", handleClick);
+    document.body.style.cursor = "grabbing";
+};
+
+function add_potential(x, y) {
+    const potential_value = document.getElementById("potential").value;
+    potentials.push(new Potential(x, y, potential_value));
+
+    distribute_charge(x, y, -1);
+}
+
+function draw_potentials() {
+    fill(potential_color);
+    noStroke();
+    potentials.forEach(potential => {
+        circle(potential.pos.x, potential.pos.y, 10);
+    });
+}
+
+function use_potentials() {
+    if (moving_charge) {
+        potentials.forEach(potential => {
+            potential.generate_charges();
+        });
+    }
+}

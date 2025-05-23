@@ -58,11 +58,11 @@ button {
   cursor: pointer;
 }
 
-#controller-left {
+.controller-left {
   width: 48%;
   position: absolute;
 }
-#controller-right {
+.controller-right {
   width: 48%;
   float: right;
 }
