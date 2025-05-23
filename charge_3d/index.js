@@ -37,7 +37,8 @@ class Conductor {
     this.connected = connected ?? true;
     this.connected_p = connected_p ?? 0;
 
-    this.charges = [];
+    this.positive_charges = [];
+    this.negative_charges = [];
 
     if (this.type == "sphere") {
       this.mesh = create_sphere(this.type_p.radius);
@@ -70,14 +71,22 @@ class Conductor {
     this.scale_mesh();
   }
 
-  set charges_num(amount) {
-    const current_amount = this.charges.length;
+  set positive_charges_num(amount) {
+    this.set_charges_num(this.positive_charges, amount, 1)
+  }
+
+  set negative_charges_num(amount) {
+    this.set_charges_num(this.negative_charges, amount, -1)
+  }
+
+  set_charges_num(charges, amount, q) {
+    const current_amount = charges.length;
     if (current_amount > amount) {
       // Remove random charges
       for (let i = 0; i < current_amount - amount; i++) {
-        const index = Math.floor(Math.random() * this.charges.length);
-        scene.remove(this.charges[index].mesh);
-        this.charges.splice(index, 1);
+        const index = Math.floor(Math.random() * charges.length);
+        scene.remove(charges[index].mesh);
+        charges.splice(index, 1);
       }
     } else if (current_amount < amount) {
       // Add new charges around the center
@@ -87,8 +96,7 @@ class Conductor {
           (Math.random() - 0.5) + this.mesh.position.y,
           (Math.random() - 0.5) + this.mesh.position.z
         );
-        const q = 1;
-        this.charges.push(new Charge(this, pos, q));
+        charges.push(new Charge(this, pos, q));
       }
     }
   }
@@ -120,7 +128,10 @@ class Conductor {
   }
 
   delete() {
-    this.charges.forEach(charge => {
+    this.positive_charges.forEach(charge => {
+      scene.remove(charge.mesh);
+    });
+    this.negative_charges.forEach(charge => {
       scene.remove(charge.mesh);
     });
     scene.remove(this.mesh);
@@ -167,8 +178,7 @@ class Charge {
 function animate() {
   requestAnimationFrame(animate);
 
-  const all_charges = conductors.flatMap(conductor => conductor.charges);
-
+  const all_charges = conductors.flatMap(conductor => [conductor.positive_charges, conductor.negative_charges].flat());
   // calculate forces
   for (let i = 0; i < all_charges.length; i++) {
     all_charges[i].force.set(0, 0, 0);

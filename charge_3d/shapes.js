@@ -40,7 +40,7 @@ function distribute_charges_in_sphere(sphere) {
   negative_charges = sphere.connected_p.negative_charges;
 
   [psoitive_charges, negative_charges].forEach((charges_amount, index) => {
-    const charge = index == 0 ? 1 : -1;
+    const q = index == 0 ? 1 : -1;
     for (let i = 0; i < charges_amount; i++) {
       const pos = new THREE.Vector3(
         (Math.random() - 0.5) * sphere.type_p.radius * 2,
@@ -49,8 +49,11 @@ function distribute_charges_in_sphere(sphere) {
       );
       if (pos.length() > sphere.type_p.radius - 0.2) pos.setLength(sphere.type_p.radius - 0.2);
 
-      const q = charge;
-      sphere.charges.push(new Charge(sphere, pos, q));
+      if (q >= 0) {
+        sphere.positive_charges.push(new Charge(sphere, pos, q));
+      } else {
+        sphere.negative_charges.push(new Charge(sphere, pos, q));
+      }
     }
   });
 }
@@ -86,14 +89,19 @@ function distribute_charges_in_box(box) {
   negative_charges = box.connected_p.negative_charges;
 
   [psoitive_charges, negative_charges].forEach((charges_amount, index) => {
-    const charge = index == 0 ? 1 : -1;
+    const q = index == 0 ? 1 : -1;
     for (let i = 0; i < charges_amount; i++) {
       const pos = new THREE.Vector3(
         (Math.random() - 0.5) * box.type_p.width * 0.9,
         (Math.random() - 0.5) * box.type_p.height * 0.9,
         (Math.random() - 0.5) * box.type_p.depth * 0.9
       );
-      box.charges.push(new Charge(box, pos, charge));
+
+      if (q >= 0) {
+        box.positive_charges.push(new Charge(box, pos, q));
+      } else {
+        box.negative_charges.push(new Charge(box, pos, q));
+      }
     }
   });
 }

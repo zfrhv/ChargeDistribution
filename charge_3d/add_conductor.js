@@ -65,7 +65,8 @@ document.getElementById("add-conductor-btn").onclick = async function(e) {
   }
 
   // Add charges control
-  controller.appendChild(create_conductor_slider(conductor, "charges_num", c_i, 0, 500, 200, 1));
+  controller.appendChild(create_conductor_slider(conductor, "positive_charges_num", c_i, 0, 500, 200, 1));
+  controller.appendChild(create_conductor_slider(conductor, "negative_charges_num", c_i, 0, 500, 0, 1));
 
   // TODO add potential
   // TODO add negative + positive collosions inside potential conductors
