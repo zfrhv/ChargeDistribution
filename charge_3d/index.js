@@ -15,7 +15,7 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.1;
 controls.enablePan = false;
-controls.minDistance = 7;
+controls.minDistance = 3;
 controls.maxDistance = 20;
 
 class Conductor {
@@ -145,3 +145,5 @@ document.getElementById("box-btn").onclick = function(e) {
   scene.add(box.object);
   conductors.push(box);
 };
+
+// TODO use mesh position instead of saving position seperately?

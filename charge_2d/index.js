@@ -15,9 +15,19 @@ class Point {
     }
 }
 
-let finished_drawing = true, moving_charge = false, start = 0;
+let updating_pixels = false;
+let update_pixels = true;
+let update_pixels_resolve;
+let update_pixels_promise = new Promise(r => {
+    update_pixels_resolve = r;
+});
 
-let points = buckets.LinkedList();
+let moving_charge = false;
+let current_drawing_shape = undefined;
+
+let shapes = [];
+shapes.push(buckets.LinkedList());
+
 let charges = buckets.LinkedList();
 
 const C = {
@@ -31,6 +41,7 @@ const C = {
 let bound_color;
 let inside_color;
 let particle_color;
+let inside_shape_color;
 
 function setup() {
     const canvas = createCanvas(500, 500);
@@ -45,6 +56,7 @@ function setup() {
     bound_color = color(200, 50, 200, 255);
     inside_color = color(40, 56, 93, 255);
     particle_color = color(255, 40, 50, 255);
+    inside_shape_color = color(42, 58, 95, 255);
     background(inside_color);
     strokeWeight(2);
     fill(255, 0);
@@ -54,12 +66,33 @@ function setup() {
 
 function draw() {
     reset_screen();
-    update_shape();
-    draw_preset_shape();
+    begin_updating_pixels_if_needed();
+    update_shapes();
+    draw_preset_shapes();
+    finish_updating_pixels_if_needed();
     move_charges();
     update_graph();
 }
 
+function begin_updating_pixels_if_needed() {
+    if (update_pixels) {
+        updating_pixels = true;
+        updatePixels();
+    }
+}
+
+function finish_updating_pixels_if_needed() {
+    if (updating_pixels) {
+        loadPixels();
+        update_pixels = false;
+        updating_pixels = false;
+        update_pixels_resolve();
+        // reset the promise
+        update_pixels_promise = new Promise(r => {
+            update_pixels_resolve = r;
+        });
+    }
+}
 
 function on_canvas(x, y) {
     return x >= 0 && y >= 0 && x < width && y < height;
@@ -80,17 +113,11 @@ function move_charges() {
             });
         });
         charges.forEach(c => {
-            if (!on_canvas(c.pos.x, c.pos.y)) { // its ok thats its unefficient cuz particles shouldnt normally escape
-                if (c.pos.x < 0) { c.pos.x = 0; }
-                if (c.pos.y < 0) { c.pos.y = 0; }
-                if (c.pos.x >= width) { c.pos.x = width-1; }
-                if (c.pos.y >= height) { c.pos.y = height-1; }
-            }
             c.velocity.add(c.force.div(C.M)).mult(C.FRICTION);
             c.pos.add(c.velocity);
-            if (pixel_is_inside_color(Math.floor(c.pos.x), Math.floor(c.pos.y))) {
+            if (pixel_is_background_color(Math.floor(c.pos.x), Math.floor(c.pos.y)) || !on_canvas(c.pos.x, c.pos.y)) {
                 c.pos.sub(c.velocity);
-                c.velocity.rotate(Math.random() * Math.PI * 2).div(1.25); // magic :)
+                c.velocity.rotate(Math.random() * Math.PI * 2).div(1.5); // cant know the dorder direction, so just repel randomly.
             }
             circle(c.pos.x, c.pos.y, 5);
         });
@@ -114,38 +141,45 @@ function update_graph() {
     }
 }
 
-function update_shape() {
+function update_shapes() {
     noFill();
     stroke(bound_color);
-    beginShape();
-    points.forEach((p) => {
-        vertex(p.x, p.y)
+    shapes.forEach(points => {
+        beginShape();
+        points.forEach(p => {
+            vertex(p.x, p.y);
+        });
+        endShape();
     });
-    endShape();
-    if (!finished_drawing && mouseIsPressed && on_canvas(mouseX, mouseY)) {
-        points.add(new Point(mouseX, mouseY));
+    if (current_drawing_shape != undefined && mouseIsPressed && on_canvas(mouseX, mouseY)) {
+        shapes[current_drawing_shape].add(new Point(mouseX, mouseY));
     }
 }
 
 function clear_all() {
-    points.clear();
+    shapes.forEach(shape => {
+        shape.clear();
+    });
+    shapes = [];
     charges.clear();
-    finished_drawing = true;
+    current_drawing_shape = undefined;
     moving_charge = false;
     clrear_preset();
+    reset_screen();
+    loadPixels();
 }
 
 function keyPressed() {
     if (key === 'c') {
         clear_all();
-    } else if (key === 'd' && !points.isEmpty() && !finished_drawing) {
-        finished_drawing = true;
-        loadPixels();
+    } else if (key === 'd' && current_drawing_shape != undefined && !shapes[current_drawing_shape].isEmpty()) {
+        const points = shapes[current_drawing_shape];
         points.add(new Point(points.first().x, points.first().y));
-    } else if (key === 'q' && finished_drawing && !moving_charge) {
-        distribute_charge(Math.floor(mouseX), Math.floor(mouseY));
-        moving_charge = true;
-        start = frameCount;
+        current_drawing_shape = undefined;
+    } else if (key === 'q' && current_drawing_shape == undefined) {
+        distribute_charge(Math.floor(mouseX), Math.floor(mouseY)).then(() => {
+            moving_charge = true;
+        });
     }
 }
 
@@ -153,23 +187,26 @@ document.getElementById('clear-btn').onclick = e => {
     clear_all();
 };
 document.getElementById('finish-drawing-btn').onclick = e => {
-    finished_drawing = true;
-    loadPixels();
+    const points = shapes[current_drawing_shape];
     points.add(new Point(points.first().x, points.first().y));
+    current_drawing_shape = undefined;
 };
 document.getElementById('fill-charges-btn').onclick = e => {
-    distribute_charge(width/2, height/2);
-    moving_charge = true;
-    start = frameCount;
+    distribute_charge(width/2, height/2).then(() => {
+        moving_charge = true;
+    });
 };
 
-function distribute_charge(center_x, center_y) {
+async function distribute_charge(center_x, center_y) {
+    update_pixels = true;
+    await update_pixels_promise;
+
     let bfsq = new buckets.Queue();
     bfsq.add(new Point(center_x, center_y));
     while (!bfsq.isEmpty()) {
         let cur = bfsq.dequeue();
-        if (pixel_is_inside_color(cur.x, cur.y)) {
-            set(cur.x, cur.y, bound_color);
+        if (pixel_is_background_color(cur.x, cur.y)) {
+            set_color(cur.x, cur.y, inside_shape_color);
             if (Math.floor(Math.random() * C.RAND) === 0) {
                 charges.add(new Charge(cur.x, cur.y));
             }
@@ -185,9 +222,17 @@ function reset_screen() {
     background(inside_color);
 }
 
-function pixel_is_inside_color(x, y) {
+function pixel_is_background_color(x, y) {
     const off = 4 * (y * width + x);
     return pixels[off] === red(inside_color) && pixels[off + 1] === green(inside_color) && pixels[off + 2] === blue(inside_color) && pixels[off + 3] === alpha(inside_color);
+}
+
+function set_color(x, y, c) {
+    const off = 4 * (y * width + x);
+    pixels[off] = red(c);
+    pixels[off + 1] = green(c);
+    pixels[off + 2] = blue(c);
+    pixels[off + 3] = alpha(c);
 }
 
 
@@ -224,67 +269,8 @@ sliders.forEach(sp => {
 // draw button
 
 document.getElementById('draw-btn').onclick = e => {
-    clear_all();
-    loadPixels();
-    finished_drawing = false;
+    current_drawing_shape = shapes.length;
+    shapes.push(buckets.LinkedList());
     noFill();
     stroke(bound_color);
 };
-
-
-// preset shapes
-
-let preset_shape = "";
-
-function presets_setup() {
-    circle_button.onclick = e => {
-        set_preset_drawing("circle");
-    };
-    dogbone_button.onclick = e => {
-        set_preset_drawing("dogbone");
-    };
-    cctri_button.onclick = e => {
-        set_preset_drawing("cctri");
-    };
-}
-
-function set_preset_drawing(name) {
-    clear_all();
-    preset_shape = name;
-    loadPixels();
-}
-
-function clrear_preset() {
-  preset_shape = "";
-}
-
-function draw_preset_shape() {
-    noFill();
-    stroke(bound_color);
-    if (preset_shape === "circle") {
-        circle(width / 2, height / 2, min(width, height) / 1.5);
-
-    } else if (preset_shape === "dogbone") {
-        const y = height / 2, d = min(width, height) / 4, r = d / 2;
-        const cxr = width / 2 + width / 4, cxl = width / 2 - width / 4, theta = PI / 1.2;
-        arc(cxr, height / 2, d, d, -theta, theta);
-        arc(cxl, height / 2, d, d, PI - theta, PI + theta);
-        line(cxr + r * Math.cos(-theta), y + r * Math.sin(-theta), cxl + r * Math.cos(PI + theta), y + r * Math.sin(PI + theta));
-        line(cxr + r * Math.cos(theta), y + r * Math.sin(theta), cxl + r * Math.cos(PI - theta), y + r * Math.sin(PI - theta));
-
-    } else if (preset_shape === "cctri") {
-        const r = min(width, height) / 1.2;
-        const cx = width / 2, cy = height / 2;
-        const theta = 2 * PI / 3;
-        const cx0 = cx + r * Math.cos(PI / 2), cy0 = cy + r * Math.sin(PI / 2),
-            cx1 = cx + r * Math.cos(PI / 2 + theta), cy1 = cy + r * Math.sin(PI / 2 + theta),
-            cx2 = cx + r * Math.cos(PI / 2 + 2 * theta), cy2 = cy + r * Math.sin(PI / 2 + 2 * theta);
-        arc(cx0, cy0, r * Math.sqrt(3), r * Math.sqrt(3), 4 * PI / 3, 5 * PI / 3);
-        arc(cx1, cy1, r * Math.sqrt(3), r * Math.sqrt(3), 0, PI / 3);
-        arc(cx2, cy2, r * Math.sqrt(3), r * Math.sqrt(3), 2 * PI / 3, PI);
-    }
-}
-
-const circle_button = document.getElementById('circle-btn');
-const dogbone_button = document.getElementById('dogbone-btn');
-const cctri_button = document.getElementById('cctri-btn');
