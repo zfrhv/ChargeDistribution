@@ -26,9 +26,9 @@ function create_sphere(radius) {
 }
 
 function bounce_off_sphere_boundary(sphere, charge) {
-  const relative_position = charge.mesh.position.clone().sub(sphere.position);
+  const relative_position = charge.mesh.position.clone().sub(sphere.mesh.position);
   if (relative_position.length() > sphere.type_p.radius) {
-    charge.mesh.position.copy(relative_position.clone().setLength(sphere.type_p.radius).add(sphere.position));
+    charge.mesh.position.copy(relative_position.clone().setLength(sphere.type_p.radius).add(sphere.mesh.position));
     const diraction = relative_position.normalize();
     const dot = charge.velocity.dot(diraction);
     charge.velocity.sub(diraction.multiplyScalar(2 * dot));
@@ -66,17 +66,17 @@ function create_box(width, height, depth) {
 }
 
 function bounce_off_box_boundary(box, charge) {
-  const pos = charge.mesh.position;
-  if (Math.abs(pos.x) > box.type_p.width/2) {
-    pos.x = Math.sign(pos.x) * box.type_p.width/2;
+  const relative_position = charge.mesh.position.clone().sub(box.mesh.position);
+  if (Math.abs(relative_position.x) > box.type_p.width/2) {
+    charge.mesh.position.x = Math.sign(relative_position.x) * box.type_p.width/2 + box.mesh.position.x;
     charge.velocity.x *= -1;
   }
-  if (Math.abs(pos.y) > box.type_p.height/2) {
-    pos.y = Math.sign(pos.y) * box.type_p.height/2;
+  if (Math.abs(relative_position.y) > box.type_p.height/2) {
+    charge.mesh.position.y = Math.sign(relative_position.y) * box.type_p.height/2 + box.mesh.position.y;
     charge.velocity.y *= -1;
   }
-  if (Math.abs(pos.z) > box.type_p.depth/2) {
-    pos.z = Math.sign(pos.z) * box.type_p.depth/2;
+  if (Math.abs(relative_position.z) > box.type_p.depth/2) {
+    charge.mesh.position.z = Math.sign(relative_position.z) * box.type_p.depth/2 + box.mesh.position.z;
     charge.velocity.z *= -1;
   }
 }

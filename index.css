@@ -6,6 +6,7 @@ html, body {
   height: 100%;
   color: white;
   overflow: hidden;
+  user-select: none;
 }
 
 a {
@@ -69,6 +70,7 @@ button {
 
 .slider-container {
   height: 50px;
+  align-items: center;
 }
 input[type="range"] {
   appearance: none;
@@ -91,4 +93,18 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   cursor: pointer;
   margin-top: -5px;
+}
+
+
+details {
+  margin: 10px;
+}
+summary {
+  cursor: pointer;
+}
+.conductor-controller {
+  margin: 10px;
+}
+select {
+  margin-bottom: 10px;
 }

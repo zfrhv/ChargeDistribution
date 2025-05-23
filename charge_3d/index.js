@@ -19,12 +19,13 @@ controls.minDistance = 3;
 controls.maxDistance = 20;
 
 class Conductor {
-  constructor(type, type_p, position, connected, connected_p) {
+  static types = ["sphere", "box"];
+
+  constructor(type, type_p, connected, connected_p) {
     /**
       type: "sphere", "box"
       type_p for sphere: { radius }
       type_p for box: { width, height, depth }
-      position: Vector3()
       connected: true
       connected_p if connected: { voltage }
       connected_p if not connected: { positive_charges, negative_charges }
@@ -32,21 +33,73 @@ class Conductor {
 
     this.type = type;
     this.type_p = type_p;
-    this.position = position ?? new THREE.Vector3();
+    this.original_type_p = Object.assign({}, type_p);
     this.connected = connected ?? true;
     this.connected_p = connected_p ?? 0;
 
     this.charges = [];
 
     if (this.type == "sphere") {
-      this.object = create_sphere(this.type_p.radius);
+      this.mesh = create_sphere(this.type_p.radius);
     } else if (this.type == "box") {
-      this.object = create_box(this.type_p.width, this.type_p.height, this.type_p.depth);
+      this.mesh = create_box(this.type_p.width, this.type_p.height, this.type_p.depth);
     }
     
 
     if (!this.connected) {
       this.distribute_charges();
+    }
+
+    scene.add(this.mesh);
+  }
+
+  set radius(r) {
+    this.type_p.radius = r;
+    this.scale_mesh();
+  }
+  set width(val) {
+    this.type_p.width = val;
+    this.scale_mesh();
+  }
+  set height(val) {
+    this.type_p.height = val;
+    this.scale_mesh();
+  }
+  set depth(val) {
+    this.type_p.depth = val;
+    this.scale_mesh();
+  }
+
+  set charges_num(amount) {
+    const current_amount = this.charges.length;
+    if (current_amount > amount) {
+      // Remove random charges
+      for (let i = 0; i < current_amount - amount; i++) {
+        const index = Math.floor(Math.random() * this.charges.length);
+        scene.remove(this.charges[index].mesh);
+        this.charges.splice(index, 1);
+      }
+    } else if (current_amount < amount) {
+      // Add new charges around the center
+      for (let i = 0; i < amount - current_amount; i++) {
+        const pos = new THREE.Vector3(
+          (Math.random() - 0.5) + this.mesh.position.x,
+          (Math.random() - 0.5) + this.mesh.position.y,
+          (Math.random() - 0.5) + this.mesh.position.z
+        );
+        const q = 1;
+        this.charges.push(new Charge(this, pos, q));
+      }
+    }
+  }
+
+  scale_mesh() {
+    if (this.type == "sphere") {
+      this.mesh.scale.setScalar(this.type_p.radius/this.original_type_p.radius);
+    } else if (this.type == "box") {
+      const n = this.type_p;
+      const o = this.original_type_p;
+      this.mesh.scale.set(n.width/o.width, n.height/o.height, n.depth/o.depth);
     }
   }
 
@@ -64,6 +117,14 @@ class Conductor {
     } else if (this.type == "box") {
       distribute_charges_in_box(this);
     }
+  }
+
+  delete() {
+    this.charges.forEach(charge => {
+      scene.remove(charge.mesh);
+    });
+    scene.remove(this.mesh);
+    this.charge = undefined;
   }
 }
 
@@ -132,18 +193,10 @@ camera.position.z = 12;
 animate();
 
 
-// controller
-
-document.getElementById("sphere-btn").onclick = function(e) {
-  const sphere = new Conductor("sphere", {radius: 5}, new THREE.Vector3(), false, {positive_charges: 500});
-  scene.add(sphere.object);
-  conductors.push(sphere);
-};
-
-document.getElementById("box-btn").onclick = function(e) {
-  const box = new Conductor("box", {width: 8, height: 8, depth: 8}, new THREE.Vector3(), false, {positive_charges: 500});
-  scene.add(box.object);
-  conductors.push(box);
-};
-
-// TODO use mesh position instead of saving position seperately?
+document.getElementById("clear-btn").onclick = function(e) {
+  document.getElementById("conductors").innerHTML = "";
+  conductors.forEach(conductor => {
+    conductor.delete();
+  });
+  conductors.length = 0;
+}

@@ -12,3 +12,7 @@ The 2d charges/electrons distribution was made with help of [Simon Berens](https
 You can clone the repo or visit the firebase/github pages website:
 - https://zfrhv.github.io/ChargeDistribution/
 - https://zahar-charge-distribution.web.app/
+
+# blah blah  
+im too lazy to make the lower potentials take out charges, i will do it only for 3d.  
+3d also will include "negative" charges (electron holes).  
