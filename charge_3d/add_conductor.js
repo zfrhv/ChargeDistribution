@@ -13,25 +13,10 @@ document.getElementById("add-conductor-btn").onclick = async function(e) {
   details.appendChild(controller);
 
   // Promise when conductor is chosen
-  let chose_conductor_r;
-  let chose_conductor_p = new Promise(r => {
-    chose_conductor_r = r;
-  });
+  let [chose_conductor_p, chose_conductor_r] = create_promise();
 
   // Conductor type selection
-  const type_select = document.createElement("select");
-  controller.appendChild(type_select);
-  const placeholder = document.createElement("option");
-  placeholder.hidden = true;
-  type_select.appendChild(placeholder);
-  Conductor.types.forEach(type => {
-    const option = document.createElement("option");
-    option.textContent = type;
-    type_select.appendChild(option);
-  });
-  type_select.addEventListener("change", e => {
-    e.target.disabled = true;
-    const selected_type = e.target.value;
+  const type_select = create_select(Conductor.types, "", true, selected_type => {
     let new_conductor;
     if (selected_type == "sphere") {
       new_conductor = new Conductor(selected_type, {radius: 5}, false, {positive_charges: 200});
@@ -43,6 +28,7 @@ document.getElementById("add-conductor-btn").onclick = async function(e) {
     chose_conductor_r();
     summary.innerHTML = details.dataset.conductor_index + "." + selected_type;
   });
+  controller.appendChild(type_select);
 
   await chose_conductor_p;
 
@@ -64,14 +50,33 @@ document.getElementById("add-conductor-btn").onclick = async function(e) {
     });
   }
 
-  // Add charges control
-  controller.appendChild(create_conductor_slider(conductor, "positive_charges_num", c_i, 0, 500, 200, 1));
-  controller.appendChild(create_conductor_slider(conductor, "negative_charges_num", c_i, 0, 500, 0, 1));
-
-  // TODO add potential
-  // TODO add negative + positive collosions inside potential conductors
+  // Add charges/potential control
+  const charge_control = document.createElement('div');
+  const charge_select = create_select(["charges", "voltage"], "charges", false, charge_chose => {
+    charge_control.replaceChildren();
+    if (charge_chose == "charges") {
+      conductor.connected = false;
+      conductor.connected_p = { positive_charges: 200, negative_charges: 0 };
+      charge_control.appendChild(create_conductor_slider(conductor, "positive_charges_num", c_i, 0, 500, 200, 1));
+      charge_control.appendChild(create_conductor_slider(conductor, "negative_charges_num", c_i, 0, 500, 0, 1));
+    } else if (charge_chose == "voltage") {
+      conductor.connected = true;
+      conductor.connected_p = { voltage: 0 };
+      charge_control.appendChild(create_conductor_slider(conductor, "voltage", c_i, -100, 100, 0));
+    }
+  });
+  controller.appendChild(charge_select);
+  controller.appendChild(charge_control);
+  charge_select.dispatchEvent(new Event("change"));
 };
 
+function create_promise() {
+  let chose_conductor_r;
+  let chose_conductor_p = new Promise(r => {
+    chose_conductor_r = r;
+  });
+  return [chose_conductor_p, chose_conductor_r];
+}
 
 function create_conductor_slider(obj, name, id, min=-5, max=5, def=0, step=0.01) {
   const slider_container = document.createElement('div');
@@ -88,4 +93,27 @@ function create_conductor_slider(obj, name, id, min=-5, max=5, def=0, step=0.01)
     obj[name] = Number(e.target.value);
   });
   return slider_container;
+}
+
+function create_select(slect_options, default_value, one_usage, execute_when_done) {
+  const select = document.createElement("select");
+  if (default_value == "") {
+    const placeholder = document.createElement("option");
+    placeholder.hidden = true;
+    select.appendChild(placeholder);
+  } else {
+    select.value = default_value;
+  }
+  slect_options.forEach(option => {
+    const option_el = document.createElement("option");
+    option_el.textContent = option;
+    select.appendChild(option_el);
+  });
+  select.addEventListener("change", e => {
+    if (one_usage) {
+      e.target.disabled = true;
+    }
+    execute_when_done(e.target.value);
+  });
+  return select;
 }
